@@ -36,9 +36,22 @@ function processMidiDevices(access) {
 
   const device = new DebugMidiDevice();
 
-  reveal.on('slidechanged', ({currentSlide}) => {
+  reveal.on('slidechanged', ({currentSlide, previousSlide}) => {
     device.debugElement = currentSlide.querySelector(".midi-debug");
     device.reset();
+
+    if(previousSlide) {
+      for (const iframe of previousSlide.querySelectorAll("iframe")) {
+        iframe.dataset.src = iframe.src;
+        iframe.src = "";
+      }
+    }
+
+    for (const iframe of currentSlide.querySelectorAll("iframe")) {
+      if(iframe.dataset.src && !iframe.src) {
+        iframe.src = iframe.dataset.src;
+      }
+    }
   });
 
   registerVirtualMidiOutput(device);

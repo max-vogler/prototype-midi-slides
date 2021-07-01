@@ -1,4 +1,6 @@
-const NOTE_ON = "on", NOTE_OFF = "off";
+const NOTE_OFF = 0x80;
+const NOTE_ON = 0x90;
+const UNKNOWN_CMD = 0xA0;
 
 class DebugMidiDevice {
 
@@ -12,7 +14,7 @@ class DebugMidiDevice {
   onmidimessage(rawMessage) {
     let message = parseMessage(rawMessage);
 
-    if(!message || message.pitch > 2) {
+    if(!message) {
       return;
     }
 
@@ -43,10 +45,10 @@ class DebugMidiDevice {
 function parseMessage(message) {
   const [cmd, pitch, velocity] = message;
 
-  if (cmd >= 128 && cmd < 144) {
-    return {command: NOTE_OFF, channel: cmd - 128, pitch, velocity};
-  } else if (cmd >= 144 && cmd < 160) {
-    return {command: NOTE_ON, channel: cmd - 144, pitch, velocity};
+  if (cmd >= NOTE_OFF && cmd < NOTE_ON) {
+    return {command: NOTE_OFF, channel: cmd - NOTE_OFF, pitch, velocity};
+  } else if (cmd >= NOTE_ON && cmd < UNKNOWN_CMD) {
+    return {command: NOTE_ON, channel: cmd - NOTE_ON, pitch, velocity};
   } else {
     return null;
   }

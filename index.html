@@ -262,7 +262,7 @@
         <section>
           <div class="browser-mockup" class="r-stretch">
             <div class="url">https://midi.maxvogler.de/touch/</div>
-            <iframe src="https://midi.maxvogler.de/touch/" allow="midi"></iframe>
+            <iframe data-src="https://midi.maxvogler.de/touch/" allow="midi"></iframe>
 
             <aside class="notes" data-markdown>
               All these slides have been built with web technologies and run right in the browser.
@@ -306,6 +306,9 @@
             the whole code licensed under MIT at the linked GitHub Repo.
           </aside>
         </section>
+        
+        
+        <!--
         <section>
           <h3>See you at Web Audio Conf</h3>
           <img src="images/flaticon.com/gamepad.svg" class="icon fragment fade-up" style="margin: 0 20px;">
@@ -326,13 +329,11 @@
             See you at Web Audio Conf.
           </aside>
         </section>
+        -->
         
-        
-        <!--<section>CONTROLLER</section>
+        <section>CONTROLLER</section>
         <section>
-          <pre class="r-stretch"><code data-trim class="language-javascript">
-            const midi = await navigator.requestMIDIAccess();
-            
+          <pre class="r-stretch"><code data-trim class="language-javascript"  data-line-numbers="1-3|5-7|9-13|14-99">           
             window.addEventListener("gamepadconnected", () => {
               requestAnimationFrame(gamePadProcessLoop);
             });
@@ -341,18 +342,70 @@
               requestAnimationFrame(gamePadProcessLoop);
               const gamepad = navigator.getGamepads()[0];
 
-              const inputs = gamepad.axes.map((axis, i) => [
-                (Math.abs(axis) < 0.1 ? NOTE_OFF : NOTE_ON) + 1,
-                i,
-                Math.round((axis / 2 + 0.5) * 127),
-              ]).forEach((message) => midi.outputs[0].send(message));
+              gamepad.buttons.forEach((button, i) => {
+                const send = button.value ? noteOn : noteOff;
+                send(i, button.value);
+              });
+
+              gamepad.axes.forEach((axis, i) => {
+                const send = Math.abs(axis) < 0.1 ? noteOn : noteOff;
+                send(gamepad.buttons.length + i, axis / 2 + 0.5);
+              }); 
             }
           </code></pre>
         </section>
+
         <section>
           <div class="browser-mockup" class="r-stretch">
             <div class="url">https://midi.maxvogler.de/controller/</div>
-            <iframe src="https://midi.maxvogler.de/controller/" allow="midi"></iframe>
+            <iframe data-src="https://midi.maxvogler.de/controller/" allow="gamepad; midi"></iframe>
+          </div>
+          
+          <aside class="midi-debug">
+            <div class="gauge-container">
+              <div class="gauge-a"></div>
+              <div class="gauge-b"></div>
+              <div class="gauge-c"></div>
+            </div>
+            <div class="gauge-container">
+              <div class="gauge-a"></div>
+              <div class="gauge-b"></div>
+              <div class="gauge-c"></div>
+            </div>
+            <div class="gauge-container">
+              <div class="gauge-a"></div>
+              <div class="gauge-b"></div>
+              <div class="gauge-c"></div>
+            </div>
+          </aside>
+        </section>
+
+        <section>GATEWAY</section>
+
+        <section>
+          <pre class="r-stretch"><code data-trim class="language-javascript"  data-line-numbers="1-3|5-9|11-99">           
+             const peer = new Peer()
+              .on("open", onPeerOpen)
+              .on("connection", initConnection);
+
+            function onPeerOpen(id) {
+              const canvas = document.querySelector("canvas");
+              const url = `https://midi.maxvogler.de/touch/#${id}`;
+              QRCode.toCanvas(canvas, url);
+            }
+
+            function initConnection(connection) {
+              connection.on("data", (message) => {
+                messages.forEach(msg => sendMIDIMessage(msg));
+              });
+            }
+          </code></pre>
+        </section>
+
+        <section>
+          <div class="browser-mockup" class="r-stretch">
+            <div class="url">https://midi.maxvogler.de/gateway/</div>
+            <iframe data-src="https://midi.maxvogler.de/gateway/" allow="gamepad; midi"></iframe>
           </div>
           
           <aside class="midi-debug">
@@ -375,47 +428,62 @@
         </section>
 
         <section>HANDPOSE</section>
-        <section>
-          <pre class="r-stretch"><code data-trim class="language-javascript">
-            const midi = await navigator.requestMIDIAccess();
-            const model = await handpose.load(); 
 
+        <section>
+          <pre class="r-stretch"><code data-trim class="language-javascript" data-line-numbers="1-4|6-7|9-10|12-14|15-17|19-20">
             const video = document.querySelector("video");
-            video.srcObject = await navigator.mediaDevices.getUserMedia({
-              audio: false, video: {facingMode: "user"}});
+            video.srcObject = await navigator.mediaDevices.getUserMedia(
+              {audio: false, video: {facingMode: "user"}});
+            video.play();
+
+            const model = await handpose.load(); 
+            processVideoLoop();
 
             async function processVideoLoop() {
               const predictions = await model.estimateHands(video);
 
               if (predictions.length > 0) {
-                const openness = calculateHandOpenness(predictions[0].annotations);
-                midiDevice.send([NOTE_ON, 0, Math.round(openness * 127)]);
+                noteOn(0, calculateHandOpenness(
+                    predictions[0].annotations));
+              } else {
+                noteOff(0, 0);
               }
 
               requestAnimationFrame(processVideoLoop);
             }
 
+            
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="r-stretch"><code data-trim class="language-javascript" data-line-numbers="1-2|3-5|6-7|9-14|16-99">
             function calculateHandOpenness(handPoints) {
-              const { palmBase, thumb, ...trackedFingers } = handPoints;
-              const openness = Object.values(trackedFingers).map((fingerPoints) =>
-                calculateFingerOpenness(palmBase[0], fingerPoints)
+              const { palmBase, thumb, ...fingers } = handPoints;
+              const openness = Object.values(fingers).map((points) =>
+                calculateFingerOpenness(palmBase[0], points)
               );
               return Math.min(1, Math.max(0, median(openness)));
             }
 
-            function calculateFingerOpenness(palmPoint, fingerPoints) {
-              const distToBase = euclideanDistance(palmPoint, fingerPoints[0]);
-              const distToTip = euclideanDistance(palmPoint, fingerPoints[4]);
-              return 0.3 + ((distToTip - distToBase) / distToBase) * 0.8;
+            function calculateFingerOpenness(palm, fingerPoints) {
+              const distToBase = distance(palm, fingerPoints[0]);
+              const distToTip = distance(palm, fingerPoints[4]);
+              return 0.3 + 0.8 * 
+                ((distToTip - distToBase) / distToBase);
             }
 
-            processVideoLoop();
+            function distance([ax, ay], [bx, by]) {
+              return Math.sqrt((bx - ax) ** 2 + (by - ay) ** 2);
+            }
+            
           </code></pre>
         </section>
+
         <section>
           <div class="browser-mockup" class="r-stretch">
             <div class="url">https://midi.maxvogler.de/handpose/</div>
-            <iframe src="https://midi.maxvogler.de/handpose/" allow="camera midi"></iframe>
+            <iframe data-src="https://midi.maxvogler.de/handpose/" allow="camera; midi"></iframe>
           </div>
           
           <aside class="midi-debug">
@@ -436,11 +504,36 @@
             </div>
           </aside>
         </section>
+
         <section>
           <h3>Credits</h3>
-          All code MIT licensed at github.com/max-vogler/midi.
-          Gamepad icon made by <a href="https://www.flaticon.com/authors/flat-icons" title="Flat Icons">Flat Icons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>.
-        </section>-->
+          
+          <ul>
+            <li>
+              Prototypes (MIT): 
+              <a href="https://github.com/max-vogler/midi">github.com/max-vogler/midi</a>
+            </li>
+            <li>
+              <a href="https://github.com/soldair/node-qrcode">QRCode</a>,
+              <a href="https://github.com/peers/peerjs">PeerJS</a>,
+              <a href="https://github.com/peers/peerjs">reveal.js</a> (MIT)
+            </li>
+            <li>
+              <a href="https://github.com/tensorflow/tfjs">tfjs</a>, 
+              <a href="https://www.npmjs.com/package/@tensorflow-models/handpose">handpose model</a>
+              (Apache-2.0)
+            </li>
+            <li>Gamepad viz from <a href="https://gamepadviewer.com/">gamepadviewer.com</a>
+            <li><a href="https://www.flaticon.com/authors/flat-icons" title="Flat Icons">Flat Icons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></li>
+          </ul>
+        </section>
+        
+        <section>
+          <div class="browser-mockup" class="r-stretch">
+            <div class="url">https://midi.maxvogler.de/latency/</div>
+            <iframe data-src="https://midi.maxvogler.de/latency/" allow="midi"></iframe>
+          </div>
+        </section>
       </div>
     </div>
 
