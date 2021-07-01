@@ -1,4 +1,5 @@
-import Deck, { VERSION } from './reveal.js'
+import Deck, { VERSION } from './reveal.js';
+import {initialize} from './midi.js';
 
 /**
  * Expose the Reveal class to the window. To create a
@@ -55,4 +56,4 @@ Reveal.isReady = () => false;
 
 Reveal.VERSION = VERSION;
 
-export default Reveal;
+export {Reveal, initialize};

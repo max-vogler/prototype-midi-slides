@@ -113,7 +113,7 @@ gulp.task('js-es6', () => {
         });
     });
 })
-gulp.task('js', gulp.parallel('js-es5', 'js-es6'));
+gulp.task('js', gulp.parallel('js-es6'));
 
 // Creates a UMD and ES module bundle for each of our
 // built-in plugins
@@ -241,7 +241,7 @@ gulp.task('eslint', () => gulp.src(['./js/**', 'gulpfile.js'])
 
 gulp.task('test', gulp.series( 'eslint', 'qunit' ))
 
-gulp.task('default', gulp.series(gulp.parallel('js', 'css', 'plugins'), 'test'))
+gulp.task('default', gulp.parallel('js', 'css', 'plugins'))
 
 gulp.task('build', gulp.parallel('js', 'css', 'plugins'))
 
@@ -254,7 +254,7 @@ gulp.task('package', gulp.series('default', () =>
         './images/**',
         './plugin/**',
         './**.md'
-    ]).pipe(zip('reveal-js-presentation.zip')).pipe(gulp.dest('./'))
+    ], {base: './'}).pipe(zip('reveal-js-presentation.zip')).pipe(gulp.dest('./'))
 
 ))
 
@@ -272,7 +272,7 @@ gulp.task('serve', () => {
 
     gulp.watch(['*.html', '*.md'], gulp.series('reload'))
 
-    gulp.watch(['js/**'], gulp.series('js', 'reload', 'test'))
+    gulp.watch(['js/**'], gulp.series('js', 'reload'))
 
     gulp.watch(['plugin/**/plugin.js'], gulp.series('plugins', 'reload'))
 
