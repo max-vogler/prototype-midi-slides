@@ -231,6 +231,33 @@
             parameters at once by tracking the user's pointer location and pressure.
           </aside>
         </section>
+
+        <section>
+          <pre><code data-trim class="language-javascript" data-line-numbers="1-3,5,11,19-20">
+            document.addEventListener("pointermove", (event) => {});
+
+            { // PointerEvent
+              button: -1,
+              buttons: 1,
+              height: 1,
+              movementX: -3,
+              movementY: 2,
+              pointerId: 1,
+              pointerType: "mouse",
+              pressure: 0.5,
+              tangentialPressure: 0,
+              tiltX: 0,
+              tiltY: 0,
+              timeStamp: 28038.30000001192,
+              twist: 0,
+              type: "pointermove",
+              width: 1,
+              x: 217.86328125,
+              y: 719.2265625,
+              // …
+          </code></pre>
+        </section>
+
         <section>
           <h3>Translating touch events to MIDI</h3>
           <pre><code data-trim class="language-javascript" data-line-numbers="1-2,7|3|4-5|6">
@@ -331,7 +358,36 @@
         </section>
         -->
         
-        <section>CONTROLLER</section>
+        <section>
+          <h3>Prototype: Gamepad Controller</h3>
+          <img src="images/flaticon.com/gamepad.svg" class="icon">
+        </section>
+        <section>
+          <pre class="r-stretch"><code data-trim class="langauge-javascript">
+          navigator.getGamepads()  # => Gamepad[]
+
+          [{
+            axes: [
+               0.041061997413635,
+              -0.175371944904327,
+              -0.701930284500122,
+              -0.928191065788269,
+            ],
+            buttons: [
+              {pressed: false, touched: false, value: 0},
+              {pressed: true,  touched: true,  value: 1},
+              {pressed: true,  touched: true,  value: 0.52156869},
+              // …
+            ],
+            connected: true,
+            id: "Xbox One Wired Controller (STANDARD GAMEPAD Vendor: 045e Product: 02ea)",
+            index: 0,
+            mapping: "standard",
+            timestamp: 227490.80000001192,
+            vibrationActuator: null,
+          }]
+          </code></pre>
+        </section>
         <section>
           <pre class="r-stretch"><code data-trim class="language-javascript"  data-line-numbers="1-3|5-7|9-13|14-99">           
             window.addEventListener("gamepadconnected", () => {
@@ -380,9 +436,13 @@
           </aside>
         </section>
 
-        <section>GATEWAY</section>
+        <section>
+          <h3>Prototype: WebRTC P2P Controller</h3>
+          <img src="images/flaticon.com/computer.svg" class="icon">
+        </section>
 
         <section>
+          <h3>Receive MIDI messages through WebRTC</h3>
           <pre class="r-stretch"><code data-trim class="language-javascript"  data-line-numbers="1-3|5-9|11-99">           
              const peer = new Peer()
               .on("open", onPeerOpen)
@@ -399,6 +459,26 @@
                 messages.forEach(msg => sendMIDIMessage(msg));
               });
             }
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>Send MIDI messages through WebRTC</h3>
+          <pre class="r-stretch"><code data-trim class="language-javascript"  data-line-numbers="1-6|8-99">           
+            let connection;
+
+            const peer = new Peer().on("open", () => {
+              const receiverId = window.location.hash.substr(1);
+              connection = peer.connect(receiverId);
+            });
+
+            document.addEventListener("pointermove",
+              ({pressure}) => {
+                connection.send([
+                  …
+                  [0x90, 0, pressure],
+                ]);
+              });
           </code></pre>
         </section>
 
@@ -427,8 +507,38 @@
           </aside>
         </section>
 
-        <section>HANDPOSE</section>
+        <section>
+          <h3>Prototype: TFJS Handpose Controller</h3>
+          <img src="images/flaticon.com/monitoring.svg" class="icon">
+        </section>
 
+        <section>
+          <pre class="r-stretch"><code data-trim class="language-javascript">
+            await model.estimateHands(video)  // => Prediction[]
+
+            [{
+              "handInViewConfidence": 0.9999556541442871,
+              "boundingBox": {
+                  "topLeft":     [ 28.1298146,  19.8936638],
+                  "bottomRight": [247.2517192, 239.0155685],
+              },
+              "annotations": {
+                  "thumb": [ … ],
+                  "indexFinger":  [
+                    [151.02550626, 206.21306088, 13.06605720],
+                    [174.06625332, 193.85526167, 22.90657806],
+                    [188.86545223, 185.76264153, 30.54719924],
+                    [196.11875342, 180.25369840, 39.67101287],
+                  ],
+                  "middleFinger": [ … ],
+                  "ringFinger":   [ … ],
+                  "pinky":        [ … ],
+                  "palmBase": [
+                    [115.1016626, 209.1353088, 0.0000614],
+                  ]
+              }}]
+          </code></pre>
+        </section>
         <section>
           <pre class="r-stretch"><code data-trim class="language-javascript" data-line-numbers="1-4|6-7|9-10|12-14|15-17|19-20">
             const video = document.querySelector("video");
@@ -451,8 +561,6 @@
 
               requestAnimationFrame(processVideoLoop);
             }
-
-            
           </code></pre>
         </section>
 
@@ -476,7 +584,6 @@
             function distance([ax, ay], [bx, by]) {
               return Math.sqrt((bx - ax) ** 2 + (by - ay) ** 2);
             }
-            
           </code></pre>
         </section>
 
@@ -503,6 +610,34 @@
               <div class="gauge-c"></div>
             </div>
           </aside>
+        </section>
+
+        <section>
+          <h3>tl;dr:</h3>
+
+          <ol>
+            <li>Web platform provides access to input devices, sensor data, data streams.</li>
+            <li>Web MIDI trivially integrates with audio applications.</li>
+            <li>Combine both to prototype new MIDI controllers in minutes.</li>
+            <li>Have fun, but watch out for stability and latency.</li>
+          </ol>
+        </section>
+
+        <section>
+          <h3>Future</h3>
+
+          <ul>
+            <li>Generate MIDI inputs with AI
+              <ul><li><a href="https://magenta.tensorflow.org/studio">Magenta Generate</a></li></ul></li>
+            <li>Integrate with HID devices
+              <ul><li>dance pads, workout machines</li></ul></li>
+            <li>Interact with livestream viewers
+              <ul><li>Twitch messages</li></ul></li>
+            <li>Interact with in-person viewers
+              <ul><li>handpose detection, link phones</li></ul></li>
+            <li>Connect remote artists to play together</li>
+            <li>Interact with live data streams</li>
+          </ul>
         </section>
 
         <section>
