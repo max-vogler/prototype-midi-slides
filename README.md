@@ -1,28 +1,31 @@
-<p align="center">
-  <a href="https://revealjs.com">
-  <img src="https://hakim-static.s3.amazonaws.com/reveal-js/logo/v1/reveal-black-text.svg" alt="reveal.js" width="450">
-  </a>
-  <br><br>
-  <a href="https://github.com/hakimel/reveal.js/actions"><img src="https://github.com/hakimel/reveal.js/workflows/tests/badge.svg"></a>
-  <a href="https://slides.com/"><img src="https://s3.amazonaws.com/static.slid.es/images/slides-github-banner-320x40.png?1" alt="Slides" width="160" height="20"></a>
-</p>
+# Rapidly Prototyping MIDI Controllers with Web MIDI
 
-reveal.js is an open source HTML presentation framework. It enables anyone with a web browser to create fully featured and beautiful presentations for free. [Check out the live demo](https://revealjs.com/).
+My talk at [Web Audio Conf 2021](https://webaudioconf2021.com/talk-a-1/) showcasing [interactive MIDI controller prototypes](https://github.com/max-vogler/midi) that run embedded in the slide deck, which itself runs in the browser.
 
-The framework comes with a broad range of features including [nested slides](https://revealjs.com/vertical-slides/), [Markdown support](https://revealjs.com/markdown/), [Auto-Animate](https://revealjs.com/auto-animate/), [PDF export](https://revealjs.com/pdf-export/), [speaker notes](https://revealjs.com/speaker-view/), [LaTeX support](https://revealjs.com/math/), [syntax highlighted code](https://revealjs.com/code/) and much more.
+[![image](https://user-images.githubusercontent.com/864168/124494799-87adcc80-ddb7-11eb-99a8-8e86037d8096.png)](https://prototype-midi-slides.maxvogler.de/)
 
-<h1>
-  <a href="https://revealjs.com/installation" style="font-size: 3em;">Get Started</a>
-</h1>
+## Development
 
-## Documentation
-The full reveal.js documentation is available at [revealjs.com](https://revealjs.com).
+### Set up
 
-## Online Editor
-Want to create your presentation using a visual editor? Try the official reveal.js presentation platform for free at [Slides.com](https://slides.com). It's made by the same people behind reveal.js.
+```
+npm ci
+```
+
+### Develop
+
+```
+npm run start
+```
+
+### Build
+
+```
+npm run build
+```
 
 ## License
 
-MIT licensed
-
-Copyright (C) 2011-2021 Hakim El Hattab, https://hakim.se
+All code is MIT licensed.  
+`/images/flaticon.com/` from www.flaticon.com  
+`/images/icons/` from [Music & Instrument Vol. 2 on Iconfinder](https://www.iconfinder.com/iconsets/music-instrument-vol-2) ([License](https://support.iconfinder.com/en/articles/18231-license-basic))
